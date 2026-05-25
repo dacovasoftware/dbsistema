@@ -187,4 +187,79 @@ router.get('/inventario', (req, res) => {
   )
 })
 
+
+router.get('/factura/:id', (req, res) => {
+  const idVenta = req.params.id
+
+  db.query(
+    `SELECT facturas.*, ventas.fecha AS fecha_venta, ventas.metodo_pago,
+            clientes.nombre AS cliente, clientes.correo, clientes.telefono, clientes.ciudad
+     FROM facturas
+     INNER JOIN ventas ON facturas.id_venta = ventas.id_venta
+     LEFT JOIN clientes ON ventas.id_cliente = clientes.id_cliente
+     WHERE facturas.id_venta = ?`,
+    [idVenta],
+    (error, facturaResultado) => {
+      if (error) return res.status(500).json(error)
+
+      if (facturaResultado.length === 0) {
+        return res.status(404).json({ mensaje: 'Factura no encontrada' })
+      }
+
+      const factura = facturaResultado[0]
+
+      db.query(
+        `SELECT detalle_venta.*, productos.nombre AS producto
+         FROM detalle_venta
+         INNER JOIN productos ON detalle_venta.id_producto = productos.id_producto
+         WHERE detalle_venta.id_venta = ?`,
+        [idVenta],
+        (error, detalles) => {
+          if (error) return res.status(500).json(error)
+
+          const doc = new PDFDocument({ margin: 45 })
+
+          res.setHeader('Content-Type', 'application/pdf')
+          res.setHeader('Content-Disposition', `inline; filename=factura-${factura.folio}.pdf`)
+
+          doc.pipe(res)
+
+          doc.fontSize(22).text('TechStore', { align: 'center' })
+          doc.fontSize(14).text('Factura de venta', { align: 'center' })
+          doc.moveDown()
+
+          doc.fontSize(11).text(`Folio: ${factura.folio}`)
+          doc.text(`Venta: #${factura.id_venta}`)
+          doc.text(`Fecha factura: ${factura.fecha}`)
+          doc.text(`Fecha venta: ${factura.fecha_venta}`)
+          doc.text(`Método de pago: ${factura.metodo_pago}`)
+          doc.moveDown()
+
+          doc.fontSize(13).text('Datos del cliente')
+          doc.fontSize(11).text(`Cliente: ${factura.cliente || 'Público general'}`)
+          doc.text(`Correo: ${factura.correo || 'N/A'}`)
+          doc.text(`Teléfono: ${factura.telefono || 'N/A'}`)
+          doc.text(`Ciudad: ${factura.ciudad || 'N/A'}`)
+          doc.moveDown()
+
+          doc.fontSize(13).text('Detalle de productos')
+          doc.moveDown(0.5)
+
+          detalles.forEach(d => {
+            doc.fontSize(10).text(
+              `${d.producto} | Cantidad: ${d.cantidad} | Precio: $${d.precio_unitario} | Subtotal: $${d.subtotal}`
+            )
+          })
+
+          doc.moveDown()
+          doc.fontSize(16).text(`Total: $${factura.total}`, { align: 'right' })
+
+          doc.end()
+        }
+      )
+    }
+  )
+})
+
+
 module.exports = router;

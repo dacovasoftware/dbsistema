@@ -125,6 +125,59 @@ router.post('/', (req, res) => {
   })
 })
 
+router.post('/factura/:id', (req, res) => {
+  const idVenta = req.params.id
+
+  db.query(
+    'SELECT * FROM ventas WHERE id_venta = ?',
+    [idVenta],
+    (error, ventaResultado) => {
+      if (error) return res.status(500).json(error)
+
+      if (ventaResultado.length === 0) {
+        return res.status(404).json({ mensaje: 'Venta no encontrada' })
+      }
+
+      const venta = ventaResultado[0]
+
+      db.query(
+        'SELECT * FROM facturas WHERE id_venta = ?',
+        [idVenta],
+        (error, facturaExistente) => {
+          if (error) return res.status(500).json(error)
+
+          if (facturaExistente.length > 0) {
+            return res.json({
+              mensaje: 'La factura ya existe',
+              factura: facturaExistente[0]
+            })
+          }
+
+          const folio = `FAC-${String(idVenta).padStart(5, '0')}`
+
+          db.query(
+            'INSERT INTO facturas(id_venta, folio, total) VALUES (?, ?, ?)',
+            [idVenta, folio, venta.total],
+            (error, resultado) => {
+              if (error) return res.status(500).json(error)
+
+              res.json({
+                mensaje: 'Factura generada correctamente',
+                factura: {
+                  id_factura: resultado.insertId,
+                  id_venta: idVenta,
+                  folio,
+                  total: venta.total
+                }
+              })
+            }
+          )
+        }
+      )
+    }
+  )
+})
+
 router.delete('/:id', (req, res) => {
   const idVenta = req.params.id
 
@@ -143,11 +196,15 @@ router.delete('/:id', (req, res) => {
           db.query('DELETE FROM detalle_venta WHERE id_venta = ?', [idVenta], (error) => {
             if (error) return db.rollback(() => res.status(500).json(error))
 
-            db.query('DELETE FROM ventas WHERE id_venta = ?', [idVenta], (error) => {
+            db.query('DELETE FROM facturas WHERE id_venta = ?', [idVenta], (error) => {
               if (error) return db.rollback(() => res.status(500).json(error))
 
-              db.commit(() => {
-                res.json({ mensaje: 'Venta eliminada y stock restaurado' })
+              db.query('DELETE FROM ventas WHERE id_venta = ?', [idVenta], (error) => {
+                if (error) return db.rollback(() => res.status(500).json(error))
+
+                db.commit(() => {
+                  res.json({ mensaje: 'Venta eliminada, factura eliminada y stock restaurado' })
+                })
               })
             })
           })

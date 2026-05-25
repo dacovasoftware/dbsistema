@@ -49,7 +49,7 @@ categorias	CREATE TABLE `categorias` (
   `id_categoria` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
   PRIMARY KEY (`id_categoria`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
 clientes	CREATE TABLE `clientes` (
   `id_cliente` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
@@ -59,7 +59,7 @@ clientes	CREATE TABLE `clientes` (
   `direccion` varchar(200) DEFAULT NULL,
   `fecha_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_cliente`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
 detalle_venta	CREATE TABLE `detalle_venta` (
   `id_detalle` int NOT NULL AUTO_INCREMENT,
   `id_venta` int NOT NULL,
@@ -70,7 +70,7 @@ detalle_venta	CREATE TABLE `detalle_venta` (
   PRIMARY KEY (`id_detalle`),
   KEY `id_venta` (`id_venta`),
   KEY `id_producto` (`id_producto`)
-) ENGINE=MyISAM AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
 facturas	CREATE TABLE `facturas` (
   `id_factura` int NOT NULL AUTO_INCREMENT,
   `id_venta` int NOT NULL,
@@ -79,7 +79,7 @@ facturas	CREATE TABLE `facturas` (
   `total` decimal(10,2) DEFAULT NULL,
   PRIMARY KEY (`id_factura`),
   KEY `id_venta` (`id_venta`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
 inventario	CREATE TABLE `inventario` (
   `id_inventario` int NOT NULL AUTO_INCREMENT,
   `id_producto` int NOT NULL,
@@ -89,7 +89,7 @@ inventario	CREATE TABLE `inventario` (
   `fecha` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_inventario`),
   KEY `id_producto` (`id_producto`)
-) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
 productos	CREATE TABLE `productos` (
   `id_producto` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(150) NOT NULL,
@@ -102,12 +102,12 @@ productos	CREATE TABLE `productos` (
   `fecha_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_producto`),
   KEY `id_categoria` (`id_categoria`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
 roles	CREATE TABLE `roles` (
   `id_rol` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(50) NOT NULL,
   PRIMARY KEY (`id_rol`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
 usuarios	CREATE TABLE `usuarios` (
   `id_usuario` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
@@ -118,7 +118,7 @@ usuarios	CREATE TABLE `usuarios` (
   PRIMARY KEY (`id_usuario`),
   UNIQUE KEY `correo` (`correo`),
   KEY `id_rol` (`id_rol`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
 ventas	CREATE TABLE `ventas` (
   `id_venta` int NOT NULL AUTO_INCREMENT,
   `id_cliente` int DEFAULT NULL,
@@ -130,4 +130,4 @@ ventas	CREATE TABLE `ventas` (
   PRIMARY KEY (`id_venta`),
   KEY `id_cliente` (`id_cliente`),
   KEY `id_usuario` (`id_usuario`)
-) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	

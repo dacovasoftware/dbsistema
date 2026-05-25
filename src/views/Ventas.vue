@@ -73,6 +73,15 @@ const imprimirTicket = (id) => {
   window.open(`${API_URL}/api/reportes/ticket/${id}`, '_blank')
 }
 
+const generarFactura = async (id) => {
+  try {
+    await api.post(`/ventas/factura/${id}`)
+    window.open(`${API_URL}/api/reportes/factura/${id}`, '_blank')
+  } catch (error) {
+    alert(error.response?.data?.mensaje || 'Error al generar factura')
+  }
+}
+
 onMounted(() => {
   cargarDatos()
 })
@@ -105,10 +114,7 @@ onMounted(() => {
 
     <div class="productos-grid">
       <div class="producto-card" v-for="p in productos" :key="p.id_producto">
-        <img
-          :src="imagenProducto(p.imagen)"
-          v-if="p.imagen"
-        >
+        <img :src="imagenProducto(p.imagen)" v-if="p.imagen">
 
         <h3>{{ p.nombre }}</h3>
         <p>${{ p.precio }}</p>
@@ -166,6 +172,7 @@ onMounted(() => {
           <th>Pago</th>
           <th>Fecha</th>
           <th>Ticket</th>
+          <th>Factura</th>
         </tr>
       </thead>
 
@@ -177,12 +184,22 @@ onMounted(() => {
           <td>${{ v.total }}</td>
           <td>{{ v.metodo_pago }}</td>
           <td>{{ v.fecha }}</td>
+
           <td>
             <button
               class="btn-venta btn-ticket"
               @click="imprimirTicket(v.id_venta)"
             >
               Ticket PDF
+            </button>
+          </td>
+
+          <td>
+            <button
+              class="btn-venta btn-factura"
+              @click="generarFactura(v.id_venta)"
+            >
+              Factura PDF
             </button>
           </td>
         </tr>
