@@ -41,11 +41,9 @@ router.post('/login', (req, res) => {
       const usuario = resultados[0];
 
       const passwordValida = await bcrypt.compare(password, usuario.password);
-
       if (!passwordValida) {
         return res.status(401).json({ mensaje: 'Contraseña incorrecta' });
       }
-
       const token = jwt.sign(
         {
           id_usuario: usuario.id_usuario,

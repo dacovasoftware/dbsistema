@@ -80,4 +80,111 @@ router.get('/dashboard', (req, res) => {
   });
 });
 
+router.get('/ventas', (req, res) => {
+  db.query(
+    `SELECT ventas.*, clientes.nombre AS cliente, usuarios.nombre AS usuario
+     FROM ventas
+     LEFT JOIN clientes ON ventas.id_cliente = clientes.id_cliente
+     LEFT JOIN usuarios ON ventas.id_usuario = usuarios.id_usuario
+     ORDER BY ventas.fecha DESC`,
+    (error, ventas) => {
+      if (error) return res.status(500).json(error)
+
+      const doc = new PDFDocument({ margin: 40 })
+
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', 'inline; filename=reporte-ventas.pdf')
+
+      doc.pipe(res)
+
+      doc.fontSize(20).text('TechStore', { align: 'center' })
+      doc.fontSize(14).text('Reporte general de ventas', { align: 'center' })
+      doc.moveDown()
+
+      let totalGeneral = 0
+
+      ventas.forEach(v => {
+        totalGeneral += Number(v.total)
+
+        doc.fontSize(10).text(
+          `Venta #${v.id_venta} | Cliente: ${v.cliente || 'Público general'} | Usuario: ${v.usuario || 'N/A'} | Pago: ${v.metodo_pago} | Total: $${v.total} | Fecha: ${v.fecha}`
+        )
+
+        doc.moveDown(0.5)
+      })
+
+      doc.moveDown()
+      doc.fontSize(14).text(`Total vendido: $${totalGeneral}`, { align: 'right' })
+
+      doc.end()
+    }
+  )
+})
+
+router.get('/productos', (req, res) => {
+  db.query(
+    `SELECT productos.*, categorias.nombre AS categoria
+     FROM productos
+     LEFT JOIN categorias ON productos.id_categoria = categorias.id_categoria
+     ORDER BY productos.nombre ASC`,
+    (error, productos) => {
+      if (error) return res.status(500).json(error)
+
+      const doc = new PDFDocument({ margin: 40 })
+
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', 'inline; filename=reporte-productos.pdf')
+
+      doc.pipe(res)
+
+      doc.fontSize(20).text('TechStore', { align: 'center' })
+      doc.fontSize(14).text('Reporte de productos', { align: 'center' })
+      doc.moveDown()
+
+      productos.forEach(p => {
+        doc.fontSize(10).text(
+          `ID: ${p.id_producto} | ${p.nombre} | Categoría: ${p.categoria || 'Sin categoría'} | Precio: $${p.precio} | Stock: ${p.stock} | Estado: ${p.estado}`
+        )
+
+        doc.moveDown(0.5)
+      })
+
+      doc.end()
+    }
+  )
+})
+
+router.get('/inventario', (req, res) => {
+  db.query(
+    `SELECT inventario.*, productos.nombre AS producto
+     FROM inventario
+     INNER JOIN productos ON inventario.id_producto = productos.id_producto
+     ORDER BY inventario.fecha DESC`,
+    (error, movimientos) => {
+      if (error) return res.status(500).json(error)
+
+      const doc = new PDFDocument({ margin: 40 })
+
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', 'inline; filename=reporte-inventario.pdf')
+
+      doc.pipe(res)
+
+      doc.fontSize(20).text('TechStore', { align: 'center' })
+      doc.fontSize(14).text('Reporte de inventario', { align: 'center' })
+      doc.moveDown()
+
+      movimientos.forEach(m => {
+        doc.fontSize(10).text(
+          `Producto: ${m.producto} | Movimiento: ${m.tipo_movimiento} | Cantidad: ${m.cantidad} | Descripción: ${m.descripcion || 'N/A'} | Fecha: ${m.fecha}`
+        )
+
+        doc.moveDown(0.5)
+      })
+
+      doc.end()
+    }
+  )
+})
+
 module.exports = router;

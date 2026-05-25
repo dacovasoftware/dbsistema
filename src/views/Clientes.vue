@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import api from '../services/api'
 
 const clientes = ref([])
+const editando = ref(false)
+const idEditando = ref(null)
 
 const form = ref({
   nombre: '',
@@ -17,9 +19,7 @@ const cargarClientes = async () => {
   clientes.value = res.data
 }
 
-const guardarCliente = async () => {
-  await api.post('/clientes', form.value)
-
+const limpiar = () => {
   form.value = {
     nombre: '',
     correo: '',
@@ -28,17 +28,38 @@ const guardarCliente = async () => {
     direccion: ''
   }
 
+  editando.value = false
+  idEditando.value = null
+}
+
+const guardarCliente = async () => {
+  if (editando.value) {
+    await api.put(`/clientes/${idEditando.value}`, form.value)
+  } else {
+    await api.post('/clientes', form.value)
+  }
+
+  limpiar()
   cargarClientes()
 }
 
+const editarCliente = (c) => {
+  form.value = { ...c }
+  editando.value = true
+  idEditando.value = c.id_cliente
+}
+
+const verCliente = (c) => {
+  alert(`Cliente: ${c.nombre}\nCorreo: ${c.correo}\nTeléfono: ${c.telefono}\nCiudad: ${c.ciudad}`)
+}
+
 const eliminarCliente = async (id) => {
+  if (!confirm('¿Eliminar cliente?')) return
   await api.delete(`/clientes/${id}`)
   cargarClientes()
 }
 
-onMounted(() => {
-  cargarClientes()
-})
+onMounted(cargarClientes)
 </script>
 
 <template>
@@ -52,7 +73,13 @@ onMounted(() => {
       <input v-model="form.ciudad" placeholder="Ciudad">
       <input v-model="form.direccion" placeholder="Dirección">
 
-      <button @click="guardarCliente">Guardar cliente</button>
+      <button class="btn btn-primary" @click="guardarCliente">
+        {{ editando ? 'Actualizar cliente' : 'Guardar cliente' }}
+      </button>
+
+      <button class="btn btn-secondary" @click="limpiar" v-if="editando">
+        Cancelar
+      </button>
     </div>
 
     <table>
@@ -63,7 +90,7 @@ onMounted(() => {
           <th>Teléfono</th>
           <th>Ciudad</th>
           <th>Dirección</th>
-          <th>Acción</th>
+          <th>Acciones</th>
         </tr>
       </thead>
 
@@ -74,8 +101,10 @@ onMounted(() => {
           <td>{{ c.telefono }}</td>
           <td>{{ c.ciudad }}</td>
           <td>{{ c.direccion }}</td>
-          <td>
-            <button @click="eliminarCliente(c.id_cliente)">Eliminar</button>
+          <td class="acciones">
+            <button class="btn btn-info" @click="verCliente(c)">Ver</button>
+            <button class="btn btn-warning" @click="editarCliente(c)">Editar</button>
+            <button class="btn btn-danger" @click="eliminarCliente(c.id_cliente)">Eliminar</button>
           </td>
         </tr>
       </tbody>

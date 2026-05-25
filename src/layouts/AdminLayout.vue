@@ -30,7 +30,9 @@ onMounted(() => {
       <router-link to="/ventas">Ventas</router-link>
       <router-link to="/inventario">Inventario</router-link>
 
-      <button @click="salir">Cerrar sesión</button>
+      <button class="btn-logout" @click="salir">
+        Cerrar sesión
+      </button>
     </aside>
 
     <main class="content">

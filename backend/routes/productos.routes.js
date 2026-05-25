@@ -29,7 +29,7 @@ router.get('/', (req, res) => {
 router.post('/', upload.single('imagen'), (req, res) => {
   const { nombre, descripcion, id_categoria, precio, stock } = req.body;
 
-  const imagen = req.file ? `http://localhost:3000/uploads/${req.file.filename}` : null;
+  const imagen = req.file ? `/uploads/${req.file.filename}` : null;
 
   db.query(
     `INSERT INTO productos(nombre, descripcion, id_categoria, precio, stock, imagen)
@@ -46,7 +46,7 @@ router.post('/', upload.single('imagen'), (req, res) => {
 router.put('/:id', upload.single('imagen'), (req, res) => {
   const { nombre, descripcion, id_categoria, precio, stock, estado } = req.body;
 
-  const imagen = req.file ? `http://localhost:3000/uploads/${req.file.filename}` : req.body.imagen_actual;
+  const imagen = req.file ? `/uploads/${req.file.filename}` : req.body.imagen_actual;
 
   db.query(
     `UPDATE productos

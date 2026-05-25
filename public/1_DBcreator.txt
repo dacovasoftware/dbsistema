@@ -1,0 +1,133 @@
+MySQL:3306/dbsistema/		http://localhost/phpmyadmin/index.php?route=/database/sql&db=dbsistema
+Su consulta se ejecutó con éxito.
+
+Su consulta se ejecutó con éxito.
+
+Su consulta se ejecutó con éxito.
+
+Su consulta se ejecutó con éxito.
+
+Su consulta se ejecutó con éxito.
+
+Su consulta se ejecutó con éxito.
+
+Su consulta se ejecutó con éxito.
+
+Su consulta se ejecutó con éxito.
+
+Su consulta se ejecutó con éxito.
+
+SHOW CREATE TABLE categorias;
+
+
+SHOW CREATE TABLE clientes;
+
+
+SHOW CREATE TABLE detalle_venta;
+
+
+SHOW CREATE TABLE facturas;
+
+
+SHOW CREATE TABLE inventario;
+
+
+SHOW CREATE TABLE productos;
+
+
+SHOW CREATE TABLE roles;
+
+
+SHOW CREATE TABLE usuarios;
+
+
+SHOW CREATE TABLE ventas;
+
+
+
+categorias	CREATE TABLE `categorias` (
+  `id_categoria` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  PRIMARY KEY (`id_categoria`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+clientes	CREATE TABLE `clientes` (
+  `id_cliente` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `correo` varchar(100) DEFAULT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `ciudad` varchar(100) DEFAULT NULL,
+  `direccion` varchar(200) DEFAULT NULL,
+  `fecha_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_cliente`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+detalle_venta	CREATE TABLE `detalle_venta` (
+  `id_detalle` int NOT NULL AUTO_INCREMENT,
+  `id_venta` int NOT NULL,
+  `id_producto` int NOT NULL,
+  `cantidad` int NOT NULL,
+  `precio_unitario` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id_detalle`),
+  KEY `id_venta` (`id_venta`),
+  KEY `id_producto` (`id_producto`)
+) ENGINE=MyISAM AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+facturas	CREATE TABLE `facturas` (
+  `id_factura` int NOT NULL AUTO_INCREMENT,
+  `id_venta` int NOT NULL,
+  `folio` varchar(50) DEFAULT NULL,
+  `fecha` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `total` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id_factura`),
+  KEY `id_venta` (`id_venta`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+inventario	CREATE TABLE `inventario` (
+  `id_inventario` int NOT NULL AUTO_INCREMENT,
+  `id_producto` int NOT NULL,
+  `tipo_movimiento` varchar(50) NOT NULL,
+  `cantidad` int NOT NULL,
+  `descripcion` text,
+  `fecha` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_inventario`),
+  KEY `id_producto` (`id_producto`)
+) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+productos	CREATE TABLE `productos` (
+  `id_producto` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(150) NOT NULL,
+  `descripcion` text,
+  `id_categoria` int DEFAULT NULL,
+  `precio` decimal(10,2) NOT NULL,
+  `stock` int NOT NULL,
+  `imagen` varchar(255) DEFAULT NULL,
+  `estado` varchar(50) DEFAULT 'Activo',
+  `fecha_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_producto`),
+  KEY `id_categoria` (`id_categoria`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+roles	CREATE TABLE `roles` (
+  `id_rol` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  PRIMARY KEY (`id_rol`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+usuarios	CREATE TABLE `usuarios` (
+  `id_usuario` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `correo` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `id_rol` int NOT NULL,
+  `fecha_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `correo` (`correo`),
+  KEY `id_rol` (`id_rol`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	
+ventas	CREATE TABLE `ventas` (
+  `id_venta` int NOT NULL AUTO_INCREMENT,
+  `id_cliente` int DEFAULT NULL,
+  `id_usuario` int DEFAULT NULL,
+  `fecha` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `total` decimal(10,2) NOT NULL,
+  `metodo_pago` varchar(50) DEFAULT NULL,
+  `estado` varchar(50) DEFAULT 'Pagada',
+  PRIMARY KEY (`id_venta`),
+  KEY `id_cliente` (`id_cliente`),
+  KEY `id_usuario` (`id_usuario`)
+) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci	

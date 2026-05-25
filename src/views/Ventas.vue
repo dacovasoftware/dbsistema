@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import api from '../services/api'
+import api, { API_URL } from '../services/api'
 
 const clientes = ref([])
 const productos = ref([])
@@ -21,6 +21,16 @@ const cargarDatos = async () => {
   ventas.value = resVentas.data
 }
 
+const imagenProducto = (imagen) => {
+  if (!imagen) return ''
+
+  if (imagen.startsWith('http')) {
+    return imagen.replace('http://localhost:3000', API_URL)
+  }
+
+  return `${API_URL}${imagen}`
+}
+
 const agregarProducto = (producto) => {
   const existe = carrito.value.find(p => p.id_producto === producto.id_producto)
 
@@ -38,7 +48,7 @@ const agregarProducto = (producto) => {
 
 const total = () => {
   return carrito.value.reduce((suma, p) => {
-    return suma + p.cantidad * p.precio_unitario
+    return suma + Number(p.cantidad) * Number(p.precio_unitario)
   }, 0)
 }
 
@@ -60,7 +70,7 @@ const registrarVenta = async () => {
 }
 
 const imprimirTicket = (id) => {
-  window.open(`http://localhost:3000/api/reportes/ticket/${id}`, '_blank')
+  window.open(`${API_URL}/api/reportes/ticket/${id}`, '_blank')
 }
 
 onMounted(() => {
@@ -75,9 +85,9 @@ onMounted(() => {
     <div class="form-card">
       <select v-model="id_cliente">
         <option value="">Público general</option>
-        <option 
-          v-for="c in clientes" 
-          :key="c.id_cliente" 
+        <option
+          v-for="c in clientes"
+          :key="c.id_cliente"
           :value="c.id_cliente"
         >
           {{ c.nombre }}
@@ -95,11 +105,18 @@ onMounted(() => {
 
     <div class="productos-grid">
       <div class="producto-card" v-for="p in productos" :key="p.id_producto">
-        <img :src="p.imagen" v-if="p.imagen">
+        <img
+          :src="imagenProducto(p.imagen)"
+          v-if="p.imagen"
+        >
+
         <h3>{{ p.nombre }}</h3>
         <p>${{ p.precio }}</p>
         <p>Stock: {{ p.stock }}</p>
-        <button @click="agregarProducto(p)">Agregar</button>
+
+        <button class="btn-venta btn-agregar" @click="agregarProducto(p)">
+          Agregar
+        </button>
       </div>
     </div>
 
@@ -122,14 +139,18 @@ onMounted(() => {
             <input v-model="p.cantidad" type="number" min="1">
           </td>
           <td>${{ p.precio_unitario }}</td>
-          <td>${{ p.cantidad * p.precio_unitario }}</td>
+          <td>${{ Number(p.cantidad) * Number(p.precio_unitario) }}</td>
         </tr>
       </tbody>
     </table>
 
     <h2>Total: ${{ total() }}</h2>
 
-    <button @click="registrarVenta" v-if="carrito.length > 0">
+    <button
+      class="btn-venta btn-registrar"
+      @click="registrarVenta"
+      v-if="carrito.length > 0"
+    >
       Registrar venta
     </button>
 
@@ -157,7 +178,12 @@ onMounted(() => {
           <td>{{ v.metodo_pago }}</td>
           <td>{{ v.fecha }}</td>
           <td>
-            <button @click="imprimirTicket(v.id_venta)">Ticket PDF</button>
+            <button
+              class="btn-venta btn-ticket"
+              @click="imprimirTicket(v.id_venta)"
+            >
+              Ticket PDF
+            </button>
           </td>
         </tr>
       </tbody>

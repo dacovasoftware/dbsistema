@@ -1,24 +1,36 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import api from '../services/api'
+import { ref, onMounted, computed } from 'vue'
+import api, { API_URL } from '../services/api'
 
 const productos = ref([])
+const busqueda = ref('')
 
 const cargarProductos = async () => {
-  try {
-
-    const res = await api.get('/productos')
-
-    productos.value = res.data
-
-  } catch (error) {
-
-    console.log(error)
-
-  }
+  const res = await api.get('/productos')
+  productos.value = res.data
 }
 
+const imagenProducto = (imagen) => {
+  if (!imagen) return ''
+
+  if (imagen.startsWith('http')) {
+    return imagen.replace('http://localhost:3000', API_URL)
+  }
+
+  return `${API_URL}${imagen}`
+}
+
+const productosFiltrados = computed(() => {
+  return productos.value.filter(p =>
+    p.nombre.toLowerCase().includes(busqueda.value.toLowerCase())
+  )
+})
+
 const agregarCarrito = (producto) => {
+  if (producto.stock <= 0) {
+    alert('Producto sin stock')
+    return
+  }
 
   let carrito = JSON.parse(localStorage.getItem('carrito')) || []
 
@@ -27,79 +39,130 @@ const agregarCarrito = (producto) => {
   )
 
   if (existe) {
-
-    existe.cantidad++
-
+    if (existe.cantidad < producto.stock) {
+      existe.cantidad++
+    } else {
+      alert('No puedes agregar más del stock disponible')
+      return
+    }
   } else {
-
     carrito.push({
-      ...producto,
+      id_producto: producto.id_producto,
+      nombre: producto.nombre,
+      descripcion: producto.descripcion,
+      precio: producto.precio,
+      stock: producto.stock,
+      imagen: producto.imagen,
       cantidad: 1
     })
-
   }
 
-  localStorage.setItem(
-    'carrito',
-    JSON.stringify(carrito)
-  )
-
+  localStorage.setItem('carrito', JSON.stringify(carrito))
   alert('Producto agregado al carrito')
 }
 
-onMounted(() => {
-  cargarProductos()
-})
+onMounted(cargarProductos)
 </script>
 
 <template>
+  <div class="cliente-page">
 
-<div>
+    <header class="cliente-navbar">
+      <div class="logo-tech">
+        <span>🛒</span>
+        <h1>TechStore</h1>
+      </div>
 
-  <header class="cliente-header">
+      <nav>
+        <router-link to="/cliente">Inicio</router-link>
+        <router-link to="/carrito">Carrito</router-link>
+      </nav>
+    </header>
 
-    <h1>TechStore</h1>
+    <section class="hero-tech">
+      <div class="hero-left">
+        <span class="hero-badge">
+          Tecnología y accesorios
+        </span>
 
-    <nav>
+        <h2>
+          Encuentra los mejores productos tecnológicos
+        </h2>
 
-      <router-link to="/cliente">
-        Inicio
-      </router-link>
+        <p>
+          Computadoras, consolas, teléfonos, impresoras 3D,
+          accesorios y mucho más.
+        </p>
 
-      <router-link to="/carrito">
-        Carrito
-      </router-link>
+        <div class="hero-search">
+          <input
+            v-model="busqueda"
+            placeholder="Buscar producto..."
+          >
+        </div>
+      </div>
 
-    </nav>
+      <div class="hero-right">
+        <img src="https://cdn-icons-png.flaticon.com/512/1055/1055687.png">
+      </div>
+    </section>
 
-  </header>
+    <section class="productos-section">
+      <div class="section-title">
+        <h2>Productos disponibles</h2>
+        <span>{{ productosFiltrados.length }} productos</span>
+      </div>
 
-  <section class="productos-grid">
+      <div class="productos-grid">
+        <div
+          class="producto-card-modern"
+          v-for="p in productosFiltrados"
+          :key="p.id_producto"
+        >
+          <div class="producto-image">
+            <img
+              :src="imagenProducto(p.imagen)"
+              v-if="p.imagen"
+            >
 
-    <div
-      class="producto-card"
-      v-for="p in productos"
-      :key="p.id_producto"
-    >
+            <div
+              class="stock-badge"
+              :class="p.stock > 0 ? 'stock-ok' : 'stock-no'"
+            >
+              {{ p.stock > 0 ? 'Disponible' : 'Agotado' }}
+            </div>
+          </div>
 
-      <img
-        :src="p.imagen"
-        v-if="p.imagen"
-      >
-      <h3>{{ p.nombre }}</h3>
-      <p>{{ p.descripcion }}</p>
-      <strong>${{ p.precio }}</strong>
-      <p>
-        Stock: {{ p.stock }}
-      </p>
-      <button @click="agregarCarrito(p)">
-        Agregar al carrito
-      </button>
+          <div class="producto-content">
+            <h3>{{ p.nombre }}</h3>
 
-    </div>
+            <p class="producto-desc">
+              {{ p.descripcion }}
+            </p>
 
-  </section>
+            <div class="producto-bottom">
+              <div>
+                <strong class="producto-price">
+                  ${{ p.precio }}
+                </strong>
 
-</div>
+                <p class="producto-stock">
+                  Stock: {{ p.stock }}
+                </p>
+              </div>
+            </div>
 
+            <button
+              class="btn-cart-modern"
+              @click="agregarCarrito(p)"
+              :disabled="p.stock <= 0"
+            >
+              {{ p.stock <= 0 ? 'Sin stock' : 'Agregar al carrito' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
 </template>
