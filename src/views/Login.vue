@@ -8,11 +8,13 @@ const router = useRouter()
 const correo = ref('')
 const password = ref('')
 const cargando = ref(false)
+const errorVisible = ref(false)
 
 const login = async () => {
 
   try {
 
+    errorVisible.value = false
     cargando.value = true
 
     const res = await api.post('/auth/login', {
@@ -34,7 +36,7 @@ const login = async () => {
 
   } catch (error) {
 
-    alert('Correo o contraseña incorrectos')
+    errorVisible.value = true
 
   } finally {
 
@@ -156,6 +158,40 @@ const login = async () => {
     </section>
 
   </div>
+
+  <Transition name="login-modal">
+    <div
+      v-if="errorVisible"
+      class="login-modal-backdrop"
+      @keydown.esc="errorVisible = false"
+      @click.self="errorVisible = false"
+    >
+      <div
+        class="login-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="login-error-title"
+        aria-describedby="login-error-message"
+      >
+        <div class="login-modal-icon">!</div>
+
+        <h2 id="login-error-title">Acceso denegado</h2>
+
+        <p id="login-error-message">
+          El correo o la contraseña son incorrectos. Verifica tus datos e intenta nuevamente.
+        </p>
+
+        <button
+          class="login-modal-button"
+          type="button"
+          autofocus
+          @click="errorVisible = false"
+        >
+          Intentar de nuevo
+        </button>
+      </div>
+    </div>
+  </Transition>
 
 </div>
 
