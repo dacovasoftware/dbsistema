@@ -1,49 +1,4 @@
 MySQL:3306/dbsistema/		http://localhost/phpmyadmin/index.php?route=/database/sql&db=dbsistema
-Su consulta se ejecutó con éxito.
-
-Su consulta se ejecutó con éxito.
-
-Su consulta se ejecutó con éxito.
-
-Su consulta se ejecutó con éxito.
-
-Su consulta se ejecutó con éxito.
-
-Su consulta se ejecutó con éxito.
-
-Su consulta se ejecutó con éxito.
-
-Su consulta se ejecutó con éxito.
-
-Su consulta se ejecutó con éxito.
-
-SHOW CREATE TABLE categorias;
-
-
-SHOW CREATE TABLE clientes;
-
-
-SHOW CREATE TABLE detalle_venta;
-
-
-SHOW CREATE TABLE facturas;
-
-
-SHOW CREATE TABLE inventario;
-
-
-SHOW CREATE TABLE productos;
-
-
-SHOW CREATE TABLE roles;
-
-
-SHOW CREATE TABLE usuarios;
-
-
-SHOW CREATE TABLE ventas;
-
-
 
 categorias	CREATE TABLE `categorias` (
   `id_categoria` int NOT NULL AUTO_INCREMENT,
