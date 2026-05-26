@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api, { API_URL } from '../services/api'
+import { useNotifications } from '../services/notifications'
 
 const productos = ref([])
 const modoEditar = ref(false)
 const idEditar = ref(null)
+const { toast, showModal, confirmModal } = useNotifications()
 
 const form = ref({
   nombre: '',
@@ -69,10 +71,18 @@ const guardarProducto = async () => {
 
   if (modoEditar.value) {
     await api.put(`/productos/${idEditar.value}`, datos)
-    alert('Producto actualizado correctamente')
+    toast({
+      type: 'success',
+      title: 'Producto actualizado',
+      message: 'Los cambios se guardaron correctamente.'
+    })
   } else {
     await api.post('/productos', datos)
-    alert('Producto registrado correctamente')
+    toast({
+      type: 'success',
+      title: 'Producto registrado',
+      message: 'El producto se registró correctamente.'
+    })
   }
 
   limpiarFormulario()
@@ -96,16 +106,28 @@ const editarProducto = (producto) => {
 }
 
 const verProducto = (producto) => {
-  alert(
-    `Producto: ${producto.nombre}\nCategoría: ${producto.categoria}\nPrecio: $${producto.precio}\nStock: ${producto.stock}\nEstado: ${producto.estado}\nDescripción: ${producto.descripcion}`
-  )
+  showModal({
+    type: 'info',
+    title: producto.nombre,
+    message: `Categoría: ${producto.categoria}\nPrecio: $${producto.precio}\nStock: ${producto.stock}\nEstado: ${producto.estado}\n\n${producto.descripcion}`
+  })
 }
 
 const eliminarProducto = async (id) => {
-  if (!confirm('¿Deseas eliminar este producto?')) return
+  const confirmado = await confirmModal({
+    title: 'Eliminar producto',
+    message: 'El producto será eliminado permanentemente del catálogo.',
+    buttonText: 'Eliminar'
+  })
+
+  if (!confirmado) return
 
   await api.delete(`/productos/${id}`)
-  alert('Producto eliminado correctamente')
+  toast({
+    type: 'success',
+    title: 'Producto eliminado',
+    message: 'El producto se eliminó correctamente.'
+  })
   cargarProductos()
 }
 

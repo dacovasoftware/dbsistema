@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
+import { useNotifications } from '../services/notifications'
 
 const clientes = ref([])
 const editando = ref(false)
 const idEditando = ref(null)
+const { toast, showModal, confirmModal } = useNotifications()
 
 const form = ref({
   nombre: '',
@@ -50,12 +52,28 @@ const editarCliente = (c) => {
 }
 
 const verCliente = (c) => {
-  alert(`Cliente: ${c.nombre}\nCorreo: ${c.correo}\nTeléfono: ${c.telefono}\nCiudad: ${c.ciudad}`)
+  showModal({
+    type: 'info',
+    title: c.nombre,
+    message: `Correo: ${c.correo}\nTeléfono: ${c.telefono}\nCiudad: ${c.ciudad}`
+  })
 }
 
 const eliminarCliente = async (id) => {
-  if (!confirm('¿Eliminar cliente?')) return
+  const confirmado = await confirmModal({
+    title: 'Eliminar cliente',
+    message: 'El registro del cliente será eliminado permanentemente.',
+    buttonText: 'Eliminar'
+  })
+
+  if (!confirmado) return
+
   await api.delete(`/clientes/${id}`)
+  toast({
+    type: 'success',
+    title: 'Cliente eliminado',
+    message: 'El cliente se eliminó correctamente.'
+  })
   cargarClientes()
 }
 

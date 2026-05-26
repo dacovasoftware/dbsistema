@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
+import { useNotifications } from '../services/notifications'
 
 const movimientos = ref([])
 const productos = ref([])
+const { toast, showModal, confirmModal } = useNotifications()
 
 const form = ref({
   id_producto: '',
@@ -44,12 +46,28 @@ const guardarMovimiento = async () => {
 }
 
 const verMovimiento = (m) => {
-  alert(`Producto: ${m.producto}\nMovimiento: ${m.tipo_movimiento}\nCantidad: ${m.cantidad}\nDescripción: ${m.descripcion}`)
+  showModal({
+    type: 'info',
+    title: m.producto,
+    message: `Movimiento: ${m.tipo_movimiento}\nCantidad: ${m.cantidad}\nDescripción: ${m.descripcion}`
+  })
 }
 
 const eliminarMovimiento = async (id) => {
-  if (!confirm('¿Eliminar movimiento del historial?')) return
+  const confirmado = await confirmModal({
+    title: 'Eliminar movimiento',
+    message: 'Este movimiento se quitará permanentemente del historial de inventario.',
+    buttonText: 'Eliminar'
+  })
+
+  if (!confirmado) return
+
   await api.delete(`/inventario/${id}`)
+  toast({
+    type: 'success',
+    title: 'Movimiento eliminado',
+    message: 'El movimiento se eliminó correctamente.'
+  })
   cargarInventario()
 }
 

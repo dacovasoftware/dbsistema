@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api, { API_URL } from '../services/api'
+import { useNotifications } from '../services/notifications'
 
 const clientes = ref([])
 const productos = ref([])
 const ventas = ref([])
 const carrito = ref([])
+const { showModal } = useNotifications()
 
 const id_cliente = ref('')
 const metodo_pago = ref('Efectivo')
@@ -78,7 +80,11 @@ const generarFactura = async (id) => {
     await api.post(`/ventas/factura/${id}`)
     window.open(`${API_URL}/api/reportes/factura/${id}`, '_blank')
   } catch (error) {
-    alert(error.response?.data?.mensaje || 'Error al generar factura')
+    showModal({
+      type: 'error',
+      title: 'Factura no generada',
+      message: error.response?.data?.mensaje || 'Error al generar la factura.'
+    })
   }
 }
 

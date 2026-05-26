@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api, { API_URL } from '../services/api'
+import { useNotifications } from '../services/notifications'
 
 const carrito = ref([])
 const metodo_pago = ref('Efectivo')
 const mensaje = ref('')
 const cargando = ref(false)
+const { toast, showModal, confirmModal } = useNotifications()
 
 const cargarCarrito = () => {
   carrito.value = JSON.parse(localStorage.getItem('carrito')) || []
@@ -20,7 +22,11 @@ const aumentar = (item) => {
     item.cantidad++
     guardarCarrito()
   } else {
-    alert('No puedes superar el stock disponible')
+    showModal({
+      type: 'warning',
+      title: 'Stock máximo alcanzado',
+      message: 'No puedes superar el stock disponible para este producto.'
+    })
   }
 }
 
@@ -36,10 +42,22 @@ const eliminarProducto = (id) => {
   guardarCarrito()
 }
 
-const vaciarCarrito = () => {
-  if (!confirm('¿Vaciar todo el carrito?')) return
+const vaciarCarrito = async () => {
+  const confirmado = await confirmModal({
+    title: 'Vaciar carrito',
+    message: 'Se quitarán todos los productos de tu carrito. Esta acción no se puede deshacer.',
+    buttonText: 'Vaciar carrito'
+  })
+
+  if (!confirmado) return
+
   carrito.value = []
   localStorage.removeItem('carrito')
+  toast({
+    type: 'success',
+    title: 'Carrito vaciado',
+    message: 'Los productos fueron retirados del carrito.'
+  })
 }
 
 const total = () => {
@@ -50,14 +68,22 @@ const total = () => {
 
 const comprar = async () => {
   if (carrito.value.length === 0) {
-    alert('El carrito está vacío')
+    showModal({
+      type: 'warning',
+      title: 'Carrito vacío',
+      message: 'Agrega al menos un producto para realizar tu compra.'
+    })
     return
   }
 
   const usuario = JSON.parse(localStorage.getItem('usuario'))
 
   if (!usuario) {
-    alert('Debes iniciar sesión')
+    showModal({
+      type: 'warning',
+      title: 'Inicia sesión',
+      message: 'Debes iniciar sesión para completar la compra.'
+    })
     return
   }
 
@@ -83,7 +109,11 @@ const comprar = async () => {
 
     window.open(`${API_URL}/api/reportes/ticket/${res.data.id_venta}`, '_blank')
   } catch (error) {
-    alert(error.response?.data?.mensaje || 'Error al realizar la compra')
+    showModal({
+      type: 'error',
+      title: 'Compra no realizada',
+      message: error.response?.data?.mensaje || 'Error al realizar la compra.'
+    })
   } finally {
     cargando.value = false
   }

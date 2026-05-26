@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import api, { API_URL } from '../services/api'
+import { useNotifications } from '../services/notifications'
 
 const productos = ref([])
 const busqueda = ref('')
+const { toast } = useNotifications()
 
 const cargarProductos = async () => {
   const res = await api.get('/productos')
@@ -28,7 +30,11 @@ const productosFiltrados = computed(() => {
 
 const agregarCarrito = (producto) => {
   if (producto.stock <= 0) {
-    alert('Producto sin stock')
+    toast({
+      type: 'warning',
+      title: 'Producto agotado',
+      message: 'Este producto no tiene stock disponible.'
+    })
     return
   }
 
@@ -42,7 +48,11 @@ const agregarCarrito = (producto) => {
     if (existe.cantidad < producto.stock) {
       existe.cantidad++
     } else {
-      alert('No puedes agregar más del stock disponible')
+      toast({
+        type: 'warning',
+        title: 'Stock máximo alcanzado',
+        message: 'No puedes agregar más unidades de este producto.'
+      })
       return
     }
   } else {
@@ -58,7 +68,11 @@ const agregarCarrito = (producto) => {
   }
 
   localStorage.setItem('carrito', JSON.stringify(carrito))
-  alert('Producto agregado al carrito')
+  toast({
+    type: 'success',
+    title: 'Agregado al carrito',
+    message: `${producto.nombre} se agregó correctamente.`
+  })
 }
 
 onMounted(cargarProductos)
