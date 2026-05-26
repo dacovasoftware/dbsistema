@@ -27,29 +27,120 @@ router.get('/ticket/:id', (req, res) => {
 
           const venta = ventaResultado[0];
 
-          const doc = new PDFDocument();
+          if (!venta) {
+            return res.status(404).json({ mensaje: 'Venta no encontrada' });
+          }
+
+          const money = (value) => `$${Number(value).toFixed(2)}`;
+          const fecha = new Date(venta.fecha).toLocaleString('es-MX', {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+          });
+          const pageWidth = 226.77;
+          const margin = 16;
+          const contentWidth = pageWidth - margin * 2;
+          const productX = margin;
+          const qtyX = 135;
+          const amountX = 166;
+          const rowHeight = 17;
+          const ticketHeight = Math.max(390, 345 + detalles.length * rowHeight);
+          const doc = new PDFDocument({
+            size: [pageWidth, ticketHeight],
+            margin
+          });
 
           res.setHeader('Content-Type', 'application/pdf');
           res.setHeader('Content-Disposition', `inline; filename=ticket-${idVenta}.pdf`);
 
           doc.pipe(res);
 
-          doc.fontSize(18).text('TechStore', { align: 'center' });
-          doc.fontSize(12).text('Ticket de venta', { align: 'center' });
-          doc.moveDown();
+          doc.rect(0, 0, pageWidth, 72).fill('#0f172a');
+          doc.fillColor('#ffffff')
+            .font('Helvetica-Bold')
+            .fontSize(20)
+            .text('TechStore', margin, 18, { width: contentWidth, align: 'center' });
+          doc.font('Helvetica')
+            .fontSize(8)
+            .fillColor('#cbd5e1')
+            .text('Tecnología y accesorios', margin, 44, { width: contentWidth, align: 'center' });
+          doc.fillColor('#334155')
+            .fontSize(9)
+            .text('TICKET DE COMPRA', margin, 89, { width: contentWidth, align: 'center' });
 
-          doc.text(`Venta: ${venta.id_venta}`);
-          doc.text(`Cliente: ${venta.cliente || 'Público general'}`);
-          doc.text(`Fecha: ${venta.fecha}`);
-          doc.text(`Método de pago: ${venta.metodo_pago}`);
-          doc.moveDown();
+          let y = 112;
+          doc.fontSize(8)
+            .fillColor('#64748b')
+            .font('Helvetica-Bold')
+            .text('FOLIO', margin, y)
+            .text('FECHA', 82, y);
+          doc.fillColor('#0f172a')
+            .font('Helvetica')
+            .fontSize(9)
+            .text(`#${venta.id_venta}`, margin, y + 13)
+            .text(fecha, 82, y + 13, { width: contentWidth - 66 });
 
-          detalles.forEach(d => {
-            doc.text(`${d.producto} x${d.cantidad} - $${d.subtotal}`);
+          y += 42;
+          doc.strokeColor('#e2e8f0').moveTo(margin, y).lineTo(pageWidth - margin, y).stroke();
+          y += 12;
+          doc.fillColor('#64748b')
+            .font('Helvetica-Bold')
+            .fontSize(8)
+            .text('CLIENTE', margin, y)
+            .text('PAGO', 123, y);
+          doc.fillColor('#0f172a')
+            .font('Helvetica')
+            .fontSize(9)
+            .text(venta.cliente || 'Público general', margin, y + 13, { width: 103 })
+            .text(venta.metodo_pago, 123, y + 13, { width: contentWidth - 107 });
+
+          y += 43;
+          doc.rect(margin, y, contentWidth, 22).fill('#f1f5f9');
+          doc.fillColor('#475569')
+            .font('Helvetica-Bold')
+            .fontSize(8)
+            .text('PRODUCTO', productX + 5, y + 7)
+            .text('CANT.', qtyX, y + 7)
+            .text('IMPORTE', amountX, y + 7, { width: 44, align: 'right' });
+
+          y += 31;
+          detalles.forEach((detalle) => {
+            const producto = String(detalle.producto || '').slice(0, 22);
+            doc.fillColor('#0f172a')
+              .font('Helvetica')
+              .fontSize(8.5)
+              .text(producto, productX + 5, y, { width: 112 })
+              .text(`x${detalle.cantidad}`, qtyX, y, { width: 28 })
+              .text(money(detalle.subtotal), amountX, y, { width: 44, align: 'right' });
+
+            y += rowHeight;
           });
 
-          doc.moveDown();
-          doc.fontSize(16).text(`Total: $${venta.total}`, { align: 'right' });
+          y += 5;
+          doc.strokeColor('#cbd5e1').dash(3, { space: 3 })
+            .moveTo(margin, y)
+            .lineTo(pageWidth - margin, y)
+            .stroke()
+            .undash();
+
+          y += 17;
+          doc.fillColor('#334155')
+            .font('Helvetica-Bold')
+            .fontSize(10)
+            .text('TOTAL', margin + 5, y + 4);
+          doc.fillColor('#0f172a')
+            .fontSize(15)
+            .text(money(venta.total), 104, y, { width: 106, align: 'right' });
+
+          y += 41;
+          doc.fillColor('#64748b')
+            .font('Helvetica')
+            .fontSize(8)
+            .text('Gracias por tu compra', margin, y, { width: contentWidth, align: 'center' });
+          doc.fontSize(7.5)
+            .text('Conserva este comprobante para cualquier aclaración.', margin, y + 15, {
+              width: contentWidth,
+              align: 'center'
+            });
 
           doc.end();
         }
@@ -217,42 +308,125 @@ router.get('/factura/:id', (req, res) => {
         (error, detalles) => {
           if (error) return res.status(500).json(error)
 
-          const doc = new PDFDocument({ margin: 45 })
+          const money = (value) => `$${Number(value).toFixed(2)}`
+          const formatDate = (value) => new Date(value).toLocaleString('es-MX', {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+          })
+          const doc = new PDFDocument({ size: 'A4', margin: 46 })
+          const left = 46
+          const right = 549
+          const width = right - left
+          const columns = {
+            product: left + 14,
+            quantity: 315,
+            price: 380,
+            subtotal: 470
+          }
 
           res.setHeader('Content-Type', 'application/pdf')
           res.setHeader('Content-Disposition', `inline; filename=factura-${factura.folio}.pdf`)
 
           doc.pipe(res)
 
-          doc.fontSize(22).text('TechStore', { align: 'center' })
-          doc.fontSize(14).text('Factura de venta', { align: 'center' })
-          doc.moveDown()
+          doc.rect(0, 0, 595.28, 116).fill('#0f172a')
+          doc.fillColor('#ffffff')
+            .font('Helvetica-Bold')
+            .fontSize(29)
+            .text('TechStore', left, 38)
+          doc.font('Helvetica')
+            .fontSize(10)
+            .fillColor('#cbd5e1')
+            .text('Tecnología y accesorios', left, 75)
 
-          doc.fontSize(11).text(`Folio: ${factura.folio}`)
-          doc.text(`Venta: #${factura.id_venta}`)
-          doc.text(`Fecha factura: ${factura.fecha}`)
-          doc.text(`Fecha venta: ${factura.fecha_venta}`)
-          doc.text(`Método de pago: ${factura.metodo_pago}`)
-          doc.moveDown()
+          doc.roundedRect(406, 30, 143, 59, 10).fill('#2563eb')
+          doc.fillColor('#dbeafe')
+            .font('Helvetica-Bold')
+            .fontSize(9)
+            .text('FACTURA DE VENTA', 421, 44, { width: 113, align: 'right' })
+          doc.fillColor('#ffffff')
+            .fontSize(18)
+            .text(factura.folio, 421, 59, { width: 113, align: 'right' })
 
-          doc.fontSize(13).text('Datos del cliente')
-          doc.fontSize(11).text(`Cliente: ${factura.cliente || 'Público general'}`)
-          doc.text(`Correo: ${factura.correo || 'N/A'}`)
-          doc.text(`Teléfono: ${factura.telefono || 'N/A'}`)
-          doc.text(`Ciudad: ${factura.ciudad || 'N/A'}`)
-          doc.moveDown()
+          let y = 148
+          doc.fillColor('#0f172a')
+            .font('Helvetica-Bold')
+            .fontSize(13)
+            .text('Datos de facturación', left, y)
 
-          doc.fontSize(13).text('Detalle de productos')
-          doc.moveDown(0.5)
+          y += 28
+          doc.roundedRect(left, y, width, 92, 10).fill('#f8fafc')
+          doc.fillColor('#64748b')
+            .font('Helvetica-Bold')
+            .fontSize(8)
+            .text('CLIENTE', left + 16, y + 16)
+            .text('FECHA DE FACTURA', left + 276, y + 16)
+            .text('CORREO', left + 16, y + 51)
+            .text('MÉTODO DE PAGO', left + 276, y + 51)
+          doc.fillColor('#0f172a')
+            .font('Helvetica')
+            .fontSize(10)
+            .text(factura.cliente || 'Público general', left + 16, y + 30, { width: 220 })
+            .text(formatDate(factura.fecha), left + 276, y + 30, { width: 205 })
+            .text(factura.correo || 'No registrado', left + 16, y + 65, { width: 220 })
+            .text(factura.metodo_pago, left + 276, y + 65, { width: 205 })
 
-          detalles.forEach(d => {
-            doc.fontSize(10).text(
-              `${d.producto} | Cantidad: ${d.cantidad} | Precio: $${d.precio_unitario} | Subtotal: $${d.subtotal}`
-            )
+          y += 122
+          doc.fillColor('#0f172a')
+            .font('Helvetica-Bold')
+            .fontSize(13)
+            .text('Detalle de productos', left, y)
+
+          y += 27
+          doc.roundedRect(left, y, width, 31, 7).fill('#0f172a')
+          doc.fillColor('#ffffff')
+            .font('Helvetica-Bold')
+            .fontSize(9)
+            .text('PRODUCTO', columns.product, y + 11)
+            .text('CANT.', columns.quantity, y + 11, { width: 48, align: 'center' })
+            .text('PRECIO', columns.price, y + 11, { width: 75, align: 'right' })
+            .text('SUBTOTAL', columns.subtotal, y + 11, { width: 65, align: 'right' })
+
+          y += 31
+          detalles.forEach((detalle, index) => {
+            const rowY = y + index * 35
+
+            if (index % 2 === 0) {
+              doc.rect(left, rowY, width, 35).fill('#f8fafc')
+            }
+
+            doc.fillColor('#0f172a')
+              .font('Helvetica')
+              .fontSize(9.5)
+              .text(detalle.producto, columns.product, rowY + 13, { width: 252 })
+              .text(String(detalle.cantidad), columns.quantity, rowY + 13, { width: 48, align: 'center' })
+              .text(money(detalle.precio_unitario), columns.price, rowY + 13, { width: 75, align: 'right' })
+              .text(money(detalle.subtotal), columns.subtotal, rowY + 13, { width: 65, align: 'right' })
           })
 
-          doc.moveDown()
-          doc.fontSize(16).text(`Total: $${factura.total}`, { align: 'right' })
+          y += detalles.length * 35 + 28
+          doc.strokeColor('#e2e8f0').moveTo(left, y).lineTo(right, y).stroke()
+          y += 21
+          doc.fillColor('#64748b')
+            .font('Helvetica')
+            .fontSize(10)
+            .text(`Venta asociada: #${factura.id_venta}`, left, y + 12)
+            .text(`Fecha de venta: ${formatDate(factura.fecha_venta)}`, left, y + 28)
+
+          doc.roundedRect(378, y, 171, 64, 10).fill('#eff6ff')
+          doc.fillColor('#2563eb')
+            .font('Helvetica-Bold')
+            .fontSize(10)
+            .text('TOTAL', 395, y + 15)
+          doc.fillColor('#0f172a')
+            .fontSize(20)
+            .text(money(factura.total), 395, y + 31, { width: 137, align: 'right' })
+
+          doc.fillColor('#64748b')
+            .font('Helvetica')
+            .fontSize(9)
+            .text('Gracias por confiar en TechStore.', left, 779, { width, align: 'center' })
+          doc.strokeColor('#e2e8f0').moveTo(left, 766).lineTo(right, 766).stroke()
 
           doc.end()
         }
